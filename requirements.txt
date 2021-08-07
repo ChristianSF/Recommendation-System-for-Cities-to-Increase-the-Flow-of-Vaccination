@@ -2,7 +2,8 @@ streamlit
 pandas
 numpy
 geopandas
-matplotlib.pyplot
+matplotlib
 shapely
 scipy
 folium
+plotly
