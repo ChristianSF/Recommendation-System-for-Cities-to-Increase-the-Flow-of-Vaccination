@@ -291,10 +291,15 @@ st.header("Recomendações")
 st.subheader("Confira as 5 cidades mais parecidas com a cidade que voce escolheu: ")
 st.write(dataset)
 
-cod1 = dataset[:,1].to_string()
-cidade = ibge[ibge['Codigo_IBGE'] == cod1]
+cidades_proximas = top_csv.tolist()
+#st.write(cidades_proximas)
+cidades_proximas = cidades_proximas[1]
 
-st.write("\n")
+for i in range(len(cidades_proximas)):
+    cidades_proximas[i] = str(cidades_proximas[i])
+
+cidade1 = ibge[ibge['Codigo_IBGE'] == cidades_proximas[1]]
+st.write(cidade1)
 
 if n_postos_cidade.shape[0] > 2:
     if area_eixo <= 0.5:
