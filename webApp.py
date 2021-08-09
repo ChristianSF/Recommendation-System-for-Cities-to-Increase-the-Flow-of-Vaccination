@@ -1,13 +1,14 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-#import plotly.graph_objects as go
+import plotly.graph_objects as go
 import geopandas as gpd
 import matplotlib.pyplot as plt
 from shapely.geometry import Point,Polygon,MultiPolygon
 from scipy.spatial import ConvexHull, convex_hull_plot_2d
 from scipy.spatial import Voronoi, voronoi_plot_2d
-#import folium as fl
+import folium as fl
+from string import digits
 
 plt.style.use("ggplot")
 
@@ -17,7 +18,7 @@ def get_data1():
     return pd.read_csv(path)
 
 def get_data2():
-    path = "data/Populacao_Densidade.cvs"
+    path = "data/ranking_cities.csv"
     return pd.read_csv(path)
 
 def get_shape():
@@ -33,43 +34,20 @@ st.title("Sistema de Recomendação para Cidades Aumentarem o Fluxo de Vacinaç�
 #st.write('Orientações para combater o COVID')
 st.subheader("Para visualizar o mapa inteiro da cidade de São Paulo, [clique aqui](mapas/mapa_geral.html). ")
 
+st.write("\n")
+
+st.warning('Aviso: A criação da página ainda está em andamento, algumas funções podem não estar totalmente prontas.')
+
 # ### Craicao das sidebars ### #
 st.sidebar.header('Escolha sua cidade:')
 
 ibge = get_data1()
-pDensidade = get_data2()
+cidades_similares = get_data2()
+cidades_similares = cidades_similares.drop(columns=['Unnamed: 0'])
 mapas = get_shape()
 
 cidade = ibge['Município']
 cidade_choice = st.sidebar.selectbox('Cidade', cidade)
-
-# ### Cidade Mais Similares ### #
-cod_ibge = get_data2().columns[0]
-
-top_csv = np.zeros((1,6),dtype=int)
-
-for city in range(0,pDensidade .shape[0]): # para cada cidade
-  actual_city = pDensidade .iloc[city]
-  #print(cod_ibge)
-  search = []
-  for line in range(1,actual_city.shape[0]): # crio o dicionáário
-      cod_ibge = str(pDensidade .columns[line])
-      dist = float(actual_city[line])
-      search.append((cod_ibge, dist))
-
-search.sort(key=lambda x:x[1]) # ordeno pela distancia
-top5 = search[1:6] # pegar top5 cidades mais próximas
-regist = np.array([[int(actual_city[0]),int(top5[0][0]),int(top5[1][0]),int(top5[2][0]),int(top5[3][0]),int(top5[4][0]) ]] )
-top_csv = np.concatenate((top_csv,regist))
-
-dataset = pd.DataFrame()
-dataset['Cidade escolhida'] = top_csv[:,0]
-dataset['Cidade mais similiar'] = top_csv[:,1]
-dataset['2° cidade mais similiar'] = top_csv[:,2]
-dataset['3° cidade mais similiar'] = top_csv[:,3]
-dataset['4° cidade mais similiar'] = top_csv[:,4]
-dataset['5° cidade mais similiar'] = top_csv[:,5]
-dataset.drop(0,inplace=True)
 
 for index, i in mapas.iterrows():
   mapas.loc[index, 'NM_MUN'] = str(i.NM_MUN).upper()
@@ -87,12 +65,11 @@ st.write(cidade_ibge.iloc[:,0:12])
 postos = get_postos()
 postos = postos.dropna()
 codigo_ibge = int(codigo_ibge)
-st.write(codigo_ibge)
 codigo_ibge = str(codigo_ibge)
-codigo_ibge = codigo_ibge[:-1]
-codigo_ibge = int(codigo_ibge)
+codigo_ibge_novo = codigo_ibge[:-1]
+codigo_ibge_novo = int(codigo_ibge_novo)
 
-n_postos_cidade = postos[postos['IBGE'] == codigo_ibge]
+n_postos_cidade = postos[postos['IBGE'] == codigo_ibge_novo]
 st.write("**Número de postos na cidade, dentro e fora do território:** {} ".format(n_postos_cidade.shape[0]))
 
 postos['geometry'] = None
@@ -228,28 +205,28 @@ else:
 #Mapa interativo:
 
 #st.subheader("Mapa:")
-#for index, i in mapas.iterrows():
- #   qtd_postos = len(postos[gdf_postos.intersects(i.geometry)])
- #   mapas.loc[index, 'qtd_postos'] = qtd_postos
+for index, i in mapas.iterrows():
+    qtd_postos = len(postos[gdf_postos.intersects(i.geometry)])
+    mapas.loc[index, 'qtd_postos'] = qtd_postos
 
 #media_lat = gdf_postos['LATITUDE'].mean()
 #media_log = gdf_postos['LONGITUDE'].mean()
 
-#mapa = fl.Map(location=[media_lat, media_log], zoom_start=9)
+#mapa = fl.Map(location=[media_lat, media_log], zoom_start=7)
 
 #for _, i in mapas.iterrows():
     #municipio_geojson = fl.features.GeoJson(i.geometry,
-      #                                      style_function=lambda feature: {
-      #                                          'color': 'purple',
-     #                                           'weight': 2,
-    #                                            'fillOpacity': 0.1
-   #                                         })
+     #                                       style_function=lambda feature: {
+    #                                            'color': 'purple',
+   #                                            'weight': 2,
+  #                                              'fillOpacity': 0.1
+ #                                           })
 
 
-  #  popup = fl.Popup("""
- #                 Municipio: {}
- #                Quantidade postos: {}
- #               """.format(i.NM_MUN, str(int(i.qtd_postos))))
+#    popup = fl.Popup("""
+#                 Municipio: {}
+#                 Quantidade postos: {}
+#               """.format(i.NM_MUN, str(int(i.qtd_postos))))
 
 #    popup.add_to(municipio_geojson)
 #    municipio_geojson.add_to(mapa)
@@ -287,27 +264,56 @@ else:
 
 #========================== Voronoi
 
-st.header("Recomendações")
 st.subheader("Confira as 5 cidades mais parecidas com a cidade que voce escolheu: ")
-st.write(dataset)
 
-cidades_proximas = top_csv.tolist()
-#st.write(cidades_proximas)
-cidades_proximas = cidades_proximas[1]
+st.warning('Aviso: A similaridade foi baseada em População Estimada e Densidade Demográfica')
 
-for i in range(len(cidades_proximas)):
-    cidades_proximas[i] = str(cidades_proximas[i])
+cidades_proximas = cidades_similares[cidades_similares['target_city'] == int(codigo_ibge)]
 
-cidade1 = ibge[ibge['Codigo_IBGE'] == cidades_proximas[1]]
-st.write(cidade1)
+cidades_proximas_lista = cidades_proximas.values.tolist()
+
+cidade1 = ibge[ibge['Codigo_IBGE'] == cidades_proximas_lista[0][1]]
+cidade1 = cidade1['Município'].values
+cidade2 = ibge[ibge['Codigo_IBGE'] == cidades_proximas_lista[0][2]]
+cidade2 = cidade2['Município'].values
+cidade3 = ibge[ibge['Codigo_IBGE'] == cidades_proximas_lista[0][3]]
+cidade3 = cidade3['Município'].values
+cidade4 = ibge[ibge['Codigo_IBGE'] == cidades_proximas_lista[0][4]]
+cidade4 = cidade4['Município'].values
+cidade5 = ibge[ibge['Codigo_IBGE'] == cidades_proximas_lista[0][5]]
+cidade5 = cidade5['Município'].values
+
+st.write("**{}, {}, {}, {}, {}.**".format(str(cidade1), str(cidade2), str(cidade3), str(cidade4), str(cidade5)))
+
+st.header("Recomendações")
 
 if n_postos_cidade.shape[0] > 2:
     if area_eixo <= 0.5:
         st.write("As Unidades Básicas de Saúde da sua cidade poderiam estar mais espalhadas,"
                  " assim elas atenderiam uma população maior e possivelmente rural.")
+        st.write("\n")
+        st.write(
+            "Outra alternativa, para atender a população que reside afastada dos centros urbanos, caso seja inviável a construção de novas UBS,"
+            " é a Unidade de Vacinação Móvel.")
+
+
+    elif area_eixo <= 0.09:
+        st.write("As Unidades Básicas de Saúde desta cidade estão muito próximas, dessa forma elas não conseguiriam atender toda a população da região.")
+        st.write("\n")
+        st.write("Outra alternativa, para atender a população que reside afastada dos centros urbanos, caso seja inviável a construção de novas UBS,"
+                 " é a Unidade de Vacinação Móvel.")
 st.write("\n")
 
-if pop_ubs >= 10000:
-    st.write("Essa cidade possuí mais de 10 mil habitantes para cada UBS, isso pode acarretar problemas futuros. "
+if n_postos_cidade.shape[0] <= 2:
+    st.write("Sua cidade **precisa** da criação de novas UBS, para que possa atendar as pessoas da região e salvar vidas.")
+
+
+if pop_ubs >= 8000 and pop_ubs < 12000:
+    st.write("Essa cidade possuí mais de 8 mil habitantes para cada UBS, isso pode acarretar problemas futuros. "
+        "O ministério da saúde recomenda que em grandes centros, a capacidade máxima de cada uma é de 12 mil habitantes."
         "Com um número maior de unidades básicas de saúde, a velocidade de vacinação municipio iria aumentar,"
         " consequentemente, o número de mortes viria a cair.")
+
+elif pop_ubs >= 12000:
+    st.write("Sua cidade possui mais de 12 mil habitantes para cada UBS, o que ultrapassa a recomendação feita pelo ministério da saúde. "
+             "Isso pode acarretar em diversos problemas futuros, já que o número de habitantes só aumenta, seria dificil não sobrecarregar em tempos de crise.")
