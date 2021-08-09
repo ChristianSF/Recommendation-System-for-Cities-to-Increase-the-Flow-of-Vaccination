@@ -8,7 +8,7 @@ from shapely.geometry import Point,Polygon,MultiPolygon
 from scipy.spatial import ConvexHull, convex_hull_plot_2d
 from scipy.spatial import Voronoi, voronoi_plot_2d
 import folium as fl
-from string import digits
+import time
 
 plt.style.use("ggplot")
 
@@ -286,6 +286,12 @@ cidade5 = cidade5['Município'].values
 st.write("**{}, {}, {}, {}, {}.**".format(str(cidade1), str(cidade2), str(cidade3), str(cidade4), str(cidade5)))
 
 st.header("Recomendações")
+
+my_bar = st.progress(0)
+
+for percent_complete in range(100):
+    time.sleep(0.1)
+    my_bar.progress(percent_complete + 1)
 
 if n_postos_cidade.shape[0] > 2:
     if area_eixo <= 0.5 and area_eixo:
