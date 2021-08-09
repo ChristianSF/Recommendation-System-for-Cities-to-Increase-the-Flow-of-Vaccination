@@ -72,7 +72,6 @@ python3-nmap==1.4.9
 pytiled-parser==0.9.4a3
 pytz==2020.5
 pypiwin32==223
-pywinpty==1.1.1
 PyYAML==5.4.1
 pyzmq==22.1.0
 qtconsole==5.1.0
