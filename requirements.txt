@@ -71,7 +71,7 @@ python-nmap==0.6.1
 python3-nmap==1.4.9
 pytiled-parser==0.9.4a3
 pytz==2020.5
-pywin32==300
+pypiwin32==223
 pywinpty==1.1.1
 PyYAML==5.4.1
 pyzmq==22.1.0
