@@ -288,7 +288,7 @@ st.write("**{}, {}, {}, {}, {}.**".format(str(cidade1), str(cidade2), str(cidade
 st.header("Recomendações")
 
 if n_postos_cidade.shape[0] > 2:
-    if area_eixo <= 0.5:
+    if area_eixo <= 0.5 and area_eixo:
         st.write("As Unidades Básicas de Saúde da sua cidade poderiam estar mais espalhadas,"
                  " assim elas atenderiam uma população maior e possivelmente rural.")
         st.write("\n")
@@ -302,10 +302,15 @@ if n_postos_cidade.shape[0] > 2:
         st.write("\n")
         st.write("Outra alternativa, para atender a população que reside afastada dos centros urbanos, caso seja inviável a construção de novas UBS,"
                  " é a Unidade de Vacinação Móvel.")
+
+
+    elif area_eixo >= 1:
+        st.write("A distribuição de Unidades Básicas de Sáude é boa, mas poderia estar melhor.")
+
 st.write("\n")
 
 if n_postos_cidade.shape[0] <= 2:
-    st.write("Sua cidade **precisa** da criação de novas UBS, para que possa atendar as pessoas da região e salvar vidas.")
+    st.error("Sua cidade **precisa** da criação de novas UBS, para que possa atender as pessoas da região e salvar vidas.")
 
 
 if pop_ubs >= 8000 and pop_ubs < 12000:
@@ -314,6 +319,10 @@ if pop_ubs >= 8000 and pop_ubs < 12000:
         "Com um número maior de unidades básicas de saúde, a velocidade de vacinação municipio iria aumentar,"
         " consequentemente, o número de mortes viria a cair.")
 
-elif pop_ubs >= 12000:
+elif pop_ubs >= 12000 and pop_ubs < 18000:
     st.write("Sua cidade possui mais de 12 mil habitantes para cada UBS, o que ultrapassa a recomendação feita pelo ministério da saúde. "
              "Isso pode acarretar em diversos problemas futuros, já que o número de habitantes só aumenta, seria dificil não sobrecarregar em tempos de crise.")
+
+elif pop_ubs >= 18000:
+    st.error("Aviso: Sua cidade possui **mais de 18 mil habitantes para cada UBS**, isso ultrapassa muito a recomendação feita pelo ministério da saúde. "
+             "Em outra pandemia como a da COVID-19 é bem possível que o sistema entre em colapso, caso as devidas medidas para tratar não sejam aplicadas.")
