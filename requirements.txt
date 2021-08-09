@@ -1,9 +1,5 @@
 time
-pandas
-numpy
 geopandas
-matplotlib
-plotly
 alabaster==0.7.12
 arcade==2.5.6
 argon2-cffi==20.1.0
@@ -13,7 +9,6 @@ Babel==2.9.0
 backcall==0.2.0
 bleach==3.3.0
 branca==0.4.2
-shapely
 Brotli==1.0.9
 certifi==2020.12.5
 cffi==1.14.5
