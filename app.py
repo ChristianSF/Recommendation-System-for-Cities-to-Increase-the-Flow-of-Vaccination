@@ -26,7 +26,11 @@ def get_shape():
 
 def get_postos():
     path = "data/ubs_sp_com_pontos.csv"
-    return  pd.read_csv(path)
+    return pd.read_csv(path)
+
+def get_doses():
+    path = "data/doses.csv"
+    return pd.read_csv(path, sep=";")
 
 # ## Nome da Apicacao ### #
 st.title("Sistema de Recomendação para Cidades Aumentarem o Fluxo de Vacinação")
@@ -44,6 +48,7 @@ ibge = get_data1()
 cidades_similares = get_data2()
 cidades_similares = cidades_similares.drop(columns=['Unnamed: 0'])
 mapas = get_shape()
+doses = get_doses()
 
 cidade = ibge['Município']
 cidade_choice = st.sidebar.selectbox('Cidade', cidade)
@@ -69,7 +74,9 @@ codigo_ibge_novo = codigo_ibge[:-1]
 codigo_ibge_novo = int(codigo_ibge_novo)
 
 n_postos_cidade = postos[postos['IBGE'] == codigo_ibge_novo]
-st.write("**Número de postos na cidade, dentro e fora do território:** {} ".format(n_postos_cidade.shape[0]))
+st.write("**Número de UBS na cidade, dentro e fora do território:** {} ".format(n_postos_cidade.shape[0]))
+doses_cidade1 = doses[doses['Município'] == str(cidade_choice)]
+st.write("**Porcentagem da população vacinada:** {}".format(doses_cidade1))
 
 postos['geometry'] = None
 for index, i in postos.iterrows():
@@ -272,22 +279,82 @@ cidades_proximas = cidades_similares[cidades_similares['target_city'] == int(cod
 cidades_proximas_lista = cidades_proximas.values.tolist()
 
 cidade1 = ibge[ibge['Codigo_IBGE'] == cidades_proximas_lista[0][1]]
-cidade1 = cidade1['Município'].values
+cidade1 = str(cidade1['Município'].values)
 cidade2 = ibge[ibge['Codigo_IBGE'] == cidades_proximas_lista[0][2]]
-cidade2 = cidade2['Município'].values
+cidade2 = str(cidade2['Município'].values)
 cidade3 = ibge[ibge['Codigo_IBGE'] == cidades_proximas_lista[0][3]]
-cidade3 = cidade3['Município'].values
+cidade3 = str(cidade3['Município'].values)
 cidade4 = ibge[ibge['Codigo_IBGE'] == cidades_proximas_lista[0][4]]
-cidade4 = cidade4['Município'].values
+cidade4 = str(cidade4['Município'].values)
 cidade5 = ibge[ibge['Codigo_IBGE'] == cidades_proximas_lista[0][5]]
-cidade5 = cidade5['Município'].values
+cidade5 = str(cidade5['Município'].values)
 
-st.write("**{}, {}, {}, {}, {}.**".format(str(cidade1), str(cidade2), str(cidade3), str(cidade4), str(cidade5)))
+cidade1 = str(cidade1.replace("['", ""))
+cidade1 = str(cidade1.replace("']", ""))
+cidade2 = str(cidade2.replace("['", ""))
+cidade2 = str(cidade2.replace("']", ""))
+cidade3 = str(cidade3.replace("['", ""))
+cidade3 = str(cidade3.replace("']", ""))
+cidade4 = str(cidade4.replace("['", ""))
+cidade4 = str(cidade4.replace("']", ""))
+cidade5 = str(cidade5.replace("['", ""))
+cidade5 = str(cidade5.replace("']", ""))
 
-st.header("Recomendações")
+lista_cidades_proximas_grafico = []
+lista_cidades_proximas_grafico.append(cidade_choice)
+lista_cidades_proximas_grafico.append(cidade1)
+lista_cidades_proximas_grafico.append(cidade2)
+lista_cidades_proximas_grafico.append(cidade3)
+lista_cidades_proximas_grafico.append(cidade4)
+lista_cidades_proximas_grafico.append(cidade5)
+
+st.write("**{}, {}, {}, {}, {}.**".format(cidade1, cidade2, cidade3, cidade4, cidade5))
+
+lista_doses = []
+doses_cidade1 = doses[doses['Município'] == str(cidade_choice)]
+lista_doses.append(str(doses_cidade1.iloc[0]['% em relação a população geral']))
+
+doses_cidade2 = doses[doses['Município'] == cidade1]
+lista_doses.append(str(doses_cidade2.iloc[0]['% em relação a população geral']))
+
+doses_cidade3 = doses[doses['Município'] == cidade2]
+lista_doses.append(str(doses_cidade3.iloc[0]['% em relação a população geral']))
+
+doses_cidade4 = doses[doses['Município'] == cidade3]
+lista_doses.append(str(doses_cidade4.iloc[0]['% em relação a população geral']))
+
+doses_cidade5 = doses[doses['Município'] == cidade4]
+lista_doses.append(str(doses_cidade5.iloc[0]['% em relação a população geral']))
+
+doses_cidade6 = doses[doses['Município'] == cidade5]
+lista_doses.append(str(doses_cidade6.iloc[0]['% em relação a população geral']))
+
+for i in range(6):
+    lista_doses[i] = lista_doses[i].replace("," , ".")
+    lista_doses[i] = float(lista_doses[i])
+
+layout = go.Layout(title="Porcentagem em relação a população geral de cidades similares",
+                   yaxis=go.layout.YAxis(title='Porcentagem em relação a população geral'),
+                   xaxis=go.layout.XAxis(title='Cidades', tickangle=45))
+
+data = [go.Bar(x=lista_cidades_proximas_grafico, y=lista_doses,  hoverinfo='x',
+               text=lista_doses,
+               marker=dict(color=lista_doses, colorscale='YlGnBu'),
+               textposition='outside',textfont=dict(
+                                                  family="sans serif",
+                                                  size=16,
+                                                  color="gray"))]
+
+
+fig = go.Figure(data=data, layout=layout)
+st.write("Veja como a vacinação da sua cidade se compara as cidades similares: ")
+st.plotly_chart(fig, use_container_width=True)
+
+
+st.header("**Recomendações:**")
 
 if n_postos_cidade.shape[0] > 2:
-    if area_eixo <= 0.5 and area_eixo:
+    if area_eixo <= 0.5 and area_eixo > 0.09:
         st.write("As Unidades Básicas de Saúde da sua cidade poderiam estar mais espalhadas,"
                  " assim elas atenderiam uma população maior e possivelmente rural.")
         st.write("\n")
@@ -302,9 +369,12 @@ if n_postos_cidade.shape[0] > 2:
         st.write("Outra alternativa, para atender a população que reside afastada dos centros urbanos, caso seja inviável a construção de novas UBS,"
                  " é a Unidade de Vacinação Móvel.")
 
-
     elif area_eixo >= 1:
         st.write("A distribuição de Unidades Básicas de Sáude é boa, mas poderia estar melhor.")
+
+
+    elif area_eixo >= 1.5:
+        st.success("Parabéns, a distribuição de postos na sua cidade é muito boa!")
 
 st.write("\n")
 
