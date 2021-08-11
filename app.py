@@ -33,7 +33,7 @@ def get_doses():
     return pd.read_csv(path, sep=";")
 
 # ## Nome da Apicacao ### #
-st.title("Sistema de Recomendação para Cidades Aumentarem o Fluxo de Vacinação")
+st.title("Sistema de Recomendação para Cidades Expandirem a Velocidade de Vacinação")
 #st.write('Orientações para combater o COVID')
 st.subheader("Para visualizar o mapa inteiro da cidade de São Paulo, [clique aqui](mapas/mapa_geral.html). ")
 
@@ -76,7 +76,7 @@ codigo_ibge_novo = int(codigo_ibge_novo)
 n_postos_cidade = postos[postos['IBGE'] == codigo_ibge_novo]
 st.write("**Número de UBS na cidade, dentro e fora do território:** {} ".format(n_postos_cidade.shape[0]))
 doses_cidade1 = doses[doses['Município'] == str(cidade_choice)]
-st.write("**Porcentagem da população vacinada:** {}".format(doses_cidade1))
+st.write("**Porcentagem da população vacinada:** {}%".format(doses_cidade1.iloc[0]['% em relação a população geral']))
 
 postos['geometry'] = None
 for index, i in postos.iterrows():
