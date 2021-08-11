@@ -32,6 +32,7 @@ def get_doses():
     path = "data/doses.csv"
     return pd.read_csv(path, sep=";")
 
+
 # ## Nome da Apicacao ### #
 st.title("Sistema de Recomendação para Cidades Expandirem a Velocidade de Vacinação")
 #st.write('Orientações para combater o COVID')
